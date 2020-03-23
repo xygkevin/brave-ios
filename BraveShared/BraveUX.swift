@@ -2,6 +2,8 @@
 
 public struct BraveUX {    
     public static let braveCommunityURL = URL(string: "https://community.brave.com/")!
+    // TODO: Use correct url once ready.
+    public static let braveVPNFaqURL = URL(string: "https://community.brave.com/")!
     public static let bravePrivacyURL = URL(string: "https://brave.com/privacy/")!
     public static let braveTermsOfUseURL = URL(string: "https://www.brave.com/terms_of_use")!
     public static let prefKeyOptInDialogWasSeen = "OptInDialogWasSeen"

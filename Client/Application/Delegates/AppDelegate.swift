@@ -14,6 +14,7 @@ import CoreSpotlight
 import UserNotifications
 import BraveShared
 import Data
+import StoreKit
 
 private let log = Logger.browserLogger
 
@@ -42,6 +43,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UIViewControllerRestorati
     
     /// Object used to handle server pings
     let dau = DAU()
+    
+    /// Must be added at launch according to Apple's documentation.
+    let iapObserver = IAPObserver()
 
     @discardableResult func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         //
@@ -170,6 +174,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UIViewControllerRestorati
         self.tabManager = nil
         self.browserViewController = nil
         self.rootViewController = nil
+        SKPaymentQueue.default().remove(iapObserver)
     }
 
     /**
@@ -208,6 +213,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UIViewControllerRestorati
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // IAPs can trigger on the app as soon as it launches,
+        // for example when a previous transaction was not finished and is in pending state.
+        SKPaymentQueue.default().add(iapObserver)
+        
         // Override point for customization after application launch.
         var shouldPerformAdditionalDelegateHandling = true
 
@@ -254,6 +263,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UIViewControllerRestorati
         }
         Preferences.General.isFirstLaunch.value = false
         Preferences.Review.launchCount.value += 1
+        
+        if !Preferences.VPN.popupShowed.value {
+            Preferences.VPN.appLaunchCountForVPNPopup.value += 1
+        }
         
         if isFirstLaunch {
             profile?.searchEngines.regionalSearchEngineSetup()

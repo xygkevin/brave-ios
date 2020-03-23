@@ -21,6 +21,7 @@ import BraveRewards
 import StoreKit
 import SafariServices
 import BraveUI
+import NetworkExtension
 
 private let log = Logger.browserLogger
 
@@ -142,6 +143,8 @@ class BrowserViewController: UIViewController {
     let rewardsObserver: LedgerObserver
     private var notificationsHandler: AdsNotificationHandler?
     private(set) var publisher: PublisherInfo?
+    
+    let vpnProductInfo = VPNProductInfo()
 
     init(profile: Profile, tabManager: TabManager, crashedLastSession: Bool,
          safeBrowsingManager: SafeBrowsing? = SafeBrowsing()) {
@@ -240,6 +243,7 @@ class BrowserViewController: UIViewController {
         Preferences.Privacy.blockAllCookies.observe(from: self)
         Preferences.Rewards.hideRewardsIcon.observe(from: self)
         Preferences.NewTabPage.selectedCustomTheme.observe(from: self)
+        Preferences.VPN.expirationDate.observe(from: self)
         // Lists need to be compiled before attempting tab restoration
         contentBlockListDeferred = ContentBlockerHelper.compileBundledLists()
         
@@ -507,6 +511,11 @@ class BrowserViewController: UIViewController {
             presentedViewController?.view.alpha = 0
         }
     }
+    
+    @objc func vpnConfigChanged() {
+        // Load latest changes to the vpn.
+        NEVPNManager.shared().loadFromPreferences { _ in }
+    }
 
     @objc func appDidBecomeActiveNotification() {
         // Re-show any components that might have been hidden because they were being displayed
@@ -536,6 +545,8 @@ class BrowserViewController: UIViewController {
                            name: UIApplication.didEnterBackgroundNotification, object: nil)
             $0.addObserver(self, selector: #selector(resetNTPNotification),
                            name: .adsOrRewardsToggledInSettings, object: nil)
+            $0.addObserver(self, selector: #selector(vpnConfigChanged),
+                           name: .NEVPNConfigurationChange, object: nil)
             
         }
         
@@ -646,6 +657,9 @@ class BrowserViewController: UIViewController {
         Bookmark.restore_1_12_Bookmarks() {
             log.info("Bookmarks from old database were successfully restored")
         }
+        
+        vpnProductInfo.load()
+        BraveVPN.initialize()
     }
     
     /// Initialize Sync without connecting. Sync webview needs to be in a "permanent" location
@@ -783,6 +797,7 @@ class BrowserViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         presentOnboardingIntro()
+        presentVPNCallout()
         
         screenshotHelper.viewIsVisible = true
         screenshotHelper.takePendingScreenshots(tabManager.allTabs)
@@ -936,6 +951,46 @@ class BrowserViewController: UIViewController {
             present(onboarding, animated: true)
             return
         }
+    }
+    
+    private func presentVPNCallout() {
+        let onboardingNotCompleted =
+            Preferences.General.basicOnboardingCompleted.value == OnboardingState.completed.rawValue
+        let notEnoughAppLaunches = Preferences.VPN.appLaunchCountForVPNPopup.value < BraveVPNCommonUI.appLaunchesToShowVPNPopup
+        let showedPopup = Preferences.VPN.popupShowed
+
+        if onboardingNotCompleted
+            || notEnoughAppLaunches
+            || showedPopup.value
+            || !VPNProductInfo.isComplete {
+            return
+        }
+        
+        let popup = EnableVPNPopupViewController().then {
+            if #available(iOS 13.0, *) {
+                $0.isModalInPresentation = true
+            }
+            $0.modalPresentationStyle = .overFullScreen
+        }
+        
+        popup.enableTapped = { [weak self] in
+            guard let vc = BraveVPN.vpnState.enableVPNDestinationVC else { return }
+            let nav = DismissableNavigationViewController(rootViewController: vc)
+            nav.navigationBar.topItem?.rightBarButtonItem =
+                .init(barButtonSystemItem: .cancel, target: nav, action: #selector(nav.dismissViewController))
+            
+            let idiom = UIDevice.current.userInterfaceIdiom
+            if #available(iOS 13.0, *) {
+                nav.modalPresentationStyle = idiom == .phone ? .pageSheet : .formSheet
+            } else {
+                nav.modalPresentationStyle = idiom == .phone ? .fullScreen : .formSheet
+            }
+            self?.present(nav, animated: true)
+        }
+        
+        present(popup, animated: false)
+        
+        showedPopup.value = true
     }
 
     // THe logic for shouldShowWhatsNewTab is as follows: If we do not have the LatestAppVersionProfileKey in
@@ -3605,6 +3660,10 @@ extension BrowserViewController: PreferencesObserver {
         case Preferences.NewTabPage.selectedCustomTheme.key:
             Preferences.NTP.ntpCheckDate.value = nil
             backgroundDataSource.startFetching()
+        case Preferences.VPN.expirationDate.key:
+            if BraveVPN.hasExpired == true {
+                BraveVPN.clearConfiguration()
+            }
         default:
             log.debug("Received a preference change for an unknown key: \(key) on \(type(of: self))")
             break

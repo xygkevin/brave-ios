@@ -153,7 +153,7 @@ class SettingsViewController: TableViewController {
             guard let vc = state.enableVPNDestinationVC else { return }
             navigationController?.pushViewController(vc, animated: true)
         case .installed:
-            BraveVPN.enableVPN()
+            BraveVPN.reconnect()
             dismiss(animated: true)
         }
     }
@@ -285,7 +285,7 @@ class SettingsViewController: TableViewController {
         func vpnSettingsRow(detailText: String, detailColor: UIColor) -> Row {
             Row(text: Strings.VPN.vpnName, detailText: detailText, selection: { [unowned self] in
                 let braveVPNSettingsVC = BraveVPNSettingsViewController()
-                braveVPNSettingsVC.faqLinkTapped = { [weak self] in
+                braveVPNSettingsVC.faqButtonTapped = { [weak self] in
                     self?.settingsDelegate?.settingsOpenURLInNewTab(BraveUX.braveVPNFaqURL)
                     self?.dismiss(animated: true)
                 }

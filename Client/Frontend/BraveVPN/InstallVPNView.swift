@@ -1,3 +1,4 @@
+// Copyright 2020 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -9,9 +10,6 @@ import BraveUI
 
 extension InstallVPNViewController {
     class View: UIView {
-        struct UX {
-            static let backgroundColor = #colorLiteral(red: 0.1529411765, green: 0.08235294118, blue: 0.368627451, alpha: 1)
-        }
         
         private let mainStackView = UIStackView().then {
             $0.axis = .vertical
@@ -20,7 +18,7 @@ extension InstallVPNViewController {
         }
         
         private let imageView = UIView().then {
-            $0.backgroundColor = UX.backgroundColor
+            $0.backgroundColor = BraveVPNCommonUI.UX.purpleBackgroundColor
             
             let image = UIImageView(image: #imageLiteral(resourceName: "install_vpn_image")).then { img in
                 img.contentMode = .scaleAspectFit
@@ -54,7 +52,7 @@ extension InstallVPNViewController {
                 let titleLabel = UILabel().then { label in
                     label.text = Strings.VPN.installProfileTitle
                     label.textAlignment = .center
-                    label.font = UIFont.systemFont(ofSize: 17, weight: .medium)
+                    label.font = .systemFont(ofSize: 17, weight: .medium)
                     label.appearanceTextColor = .black
                     label.minimumScaleFactor = 0.5
                     label.adjustsFontSizeToFitWidth = true
@@ -63,7 +61,7 @@ extension InstallVPNViewController {
                 let bodyLabel = UILabel().then { label in
                     label.text = Strings.VPN.installProfileBody
                     label.numberOfLines = 0
-                    label.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+                    label.font = .systemFont(ofSize: 15, weight: .medium)
                     label.appearanceTextColor = #colorLiteral(red: 0.4745098039, green: 0.4745098039, blue: 0.4745098039, alpha: 1)
                 }
                 
@@ -81,7 +79,7 @@ extension InstallVPNViewController {
         let installVPNButton = Button().then {
             $0.setTitle(Strings.VPN.installProfileButtonText, for: .normal)
             $0.backgroundColor = BraveUX.braveOrange
-            $0.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+            $0.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
             $0.appearanceTextColor = .white
             $0.snp.makeConstraints { make in
                 make.height.equalTo(44)

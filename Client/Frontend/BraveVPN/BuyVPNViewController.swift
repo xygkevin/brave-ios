@@ -1,3 +1,4 @@
+// Copyright 2020 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,11 +8,22 @@ import Shared
 import BraveShared
 import StoreKit
 
+private let log = Logger.browserLogger
+
 class BuyVPNViewController: UIViewController {
     
-    var overlayView: UIView?
+    private var buyVPNView: View {
+      return view as! View // swiftlint:disable:this force_cast
+    }
     
-    var isLoading: Bool? {
+    override func loadView() {
+        view = View()
+    }
+    
+    /// View to show when the vpn purchase is pending.
+    private var overlayView: UIView?
+    
+    private var isLoading: Bool = false {
         didSet {
             overlayView?.removeFromSuperview()
             
@@ -20,7 +32,7 @@ class BuyVPNViewController: UIViewController {
                 navigationController?.isModalInPresentation = isLoading == true
             }
             
-            if isLoading == false { return }
+            if !isLoading { return }
             
             let overlay = UIView().then {
                 $0.backgroundColor = UIColor.black.withAlphaComponent(0.5)
@@ -53,47 +65,15 @@ class BuyVPNViewController: UIViewController {
         buyVPNView.restorePurchasesButton
             .addTarget(self, action: #selector(restorePurchasesAction), for: .touchUpInside)
         
-        (UIApplication.shared.delegate as? AppDelegate)?.iapObserver.do {
-            $0.purchasedOrRestoredProductCallback = purchasedOrRestoredVPNPlan
-            $0.purchaseFailedCallback = { [weak self] error in
-                
-                DispatchQueue.main.async {
-                    self?.isLoading = false
-                    
-                    // User intentionally tapped to cancel purchase , no need to show any alert on our side.
-                    if error?.code == SKError.paymentCancelled {
-                        return
-                    }
-                    
-                    // For all other errors, we attach associated code for easier debugging.
-                    // See SKError.h for list of all codes.
-                    let message = "\(Strings.VPN.vpnErrorPurchaseFailedBody) (\(error?.code.rawValue ?? -1))"
-                    
-                    let alert = UIAlertController(title: Strings.VPN.vpnErrorPurchaseFailedTitle,
-                                                  message: message,
-                                                  preferredStyle: .alert)
-                    let ok = UIAlertAction(title: Strings.OKString, style: .default, handler: nil)
-                    alert.addAction(ok)
-                    self?.present(alert, animated: true)
-                }
-            }
-        }
+        (UIApplication.shared.delegate as? AppDelegate)?.iapObserver.delegate = self
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         // For some reason setting `barTintColor` for `formSheet` type of modal doesn't work
-        // in `viewDidLoad` method, doing it later to prevent that.
+        // in `viewDidLoad` method, doing it later as a workaround.
         styleNavigationBar()
-    }
-    
-    private var buyVPNView: View {
-      return view as! View // swiftlint:disable:this force_cast
-    }
-    
-    override func loadView() {
-        view = View()
     }
     
     private func styleNavigationBar() {
@@ -106,18 +86,51 @@ class BuyVPNViewController: UIViewController {
         }
     }
     
-    func purchasedOrRestoredVPNPlan() {
-        BraveVPN.configureFirstTimeUser { [weak self] completion in
+    // MARK: - Button actions
+    @objc func monthlySubscriptionAction() {
+        guard let monthlySub = VPNProductInfo.monthlySubProduct else {
+            log.error("Failed to retrieve monthly subcription product")
+            return
+        }
+        isLoading = true
+        let payment = SKPayment(product: monthlySub)
+        SKPaymentQueue.default().add(payment)
+    }
+    
+    @objc func closeView() {
+        dismiss(animated: true)
+    }
+    
+    @objc func yearlySubscriptionAction() {
+        guard let yearlySub = VPNProductInfo.yearlySubProduct else {
+            log.error("Failed to retrieve yearly subcription product")
+            return
+        }
+        isLoading = true
+        let payment = SKPayment(product: yearlySub)
+        SKPaymentQueue.default().add(payment)
+    }
+    
+    @objc func restorePurchasesAction() {
+        isLoading = true
+        SKPaymentQueue.default().restoreCompletedTransactions()
+    }
+}
+
+// MARK: - IAPObserverDelegate
+
+extension BuyVPNViewController: IAPObserverDelegate {
+    func purchasedOrRestoredProduct() {
+        BraveVPN.configureFirstTimeUser { completion in
             DispatchQueue.main.async {
-                self?.isLoading = false
+                self.isLoading = false
             }
             
             switch completion {
             case .success:
-                Preferences.VPN.purchasedOrRestoredProduct.value = true
                 // Not using `push` since we don't want the user to go back.
                 DispatchQueue.main.async {
-                    self?.navigationController?.setViewControllers([InstallVPNViewController()], animated:
+                    self.navigationController?.setViewControllers([InstallVPNViewController()], animated:
                     true)
                 }
                 
@@ -139,33 +152,31 @@ class BuyVPNViewController: UIViewController {
                     let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
                     let ok = UIAlertAction(title: Strings.OKString, style: .default, handler: nil)
                     alert.addAction(ok)
-                    self?.present(alert, animated: true)
+                    self.present(alert, animated: true)
                 }
             }
         }
     }
     
-    // MARK: - Actions
-    @objc func monthlySubscriptionAction() {
-        guard let monthlySub = VPNProductInfo.monthlySubProduct else { return }
-        isLoading = true
-        let payment = SKPayment(product: monthlySub)
-        SKPaymentQueue.default().add(payment)
-    }
-    
-    @objc func closeView() {
-        dismiss(animated: true)
-    }
-    
-    @objc func yearlySubscriptionAction() {
-        guard let yearlySub = VPNProductInfo.yearlySubProduct else { return }
-        isLoading = true
-        let payment = SKPayment(product: yearlySub)
-        SKPaymentQueue.default().add(payment)
-    }
-    
-    @objc func restorePurchasesAction() {
-        isLoading = true
-        SKPaymentQueue.default().restoreCompletedTransactions()
+    func purchaseFailed(error: SKError?) {
+        DispatchQueue.main.async {
+            self.isLoading = false
+            
+            // User intentionally tapped to cancel purchase , no need to show any alert on our side.
+            if error?.code == SKError.paymentCancelled {
+                return
+            }
+            
+            // For all other errors, we attach associated code for easier debugging.
+            // See SKError.h for list of all codes.
+            let message = "\(Strings.VPN.vpnErrorPurchaseFailedBody) (\(error?.code.rawValue ?? -1))"
+            
+            let alert = UIAlertController(title: Strings.VPN.vpnErrorPurchaseFailedTitle,
+                                          message: message,
+                                          preferredStyle: .alert)
+            let ok = UIAlertAction(title: Strings.OKString, style: .default, handler: nil)
+            alert.addAction(ok)
+            self.present(alert, animated: true)
+        }
     }
 }

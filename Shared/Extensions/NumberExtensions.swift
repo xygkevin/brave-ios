@@ -32,10 +32,6 @@ public extension Int {
 
 public extension NSDecimalNumber {
     
-    func aa(with locale: Locale = .current) -> String {
-        return ""
-    }
-    
     /// Returns a currency formatted string where the currency's symbol is in front.
     /// For example $19.99.
     func frontSymbolCurrencyFormatted(with locale: Locale) -> String? {

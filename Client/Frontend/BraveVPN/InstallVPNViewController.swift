@@ -1,3 +1,4 @@
+// Copyright 2020 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,6 +8,18 @@ import Shared
 import BraveShared
 
 class InstallVPNViewController: UIViewController {
+    
+    private var installVPNView: View {
+        return view as! View // swiftlint:disable:this force_cast
+    }
+    
+    override func loadView() {
+        view = View()
+    }
+    
+    @objc func dismissView() {
+        dismiss(animated: true)
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,24 +35,12 @@ class InstallVPNViewController: UIViewController {
         styleNavigationBar()
     }
     
-    private var installVPNView: View {
-        return view as! View // swiftlint:disable:this force_cast
-    }
-    
-    override func loadView() {
-        view = View()
-    }
-    
-    @objc func dismissView() {
-        dismiss(animated: true)
-    }
-
     private func styleNavigationBar() {
         title = Strings.VPN.installTitle
                         
         navigationController?.navigationBar.do {
             $0.tintColor = .white
-            $0.barTintColor = View.UX.backgroundColor
+            $0.barTintColor = BraveVPNCommonUI.UX.purpleBackgroundColor
             $0.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
         }
     }

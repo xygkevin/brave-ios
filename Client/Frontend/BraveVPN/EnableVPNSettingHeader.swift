@@ -1,3 +1,4 @@
+// Copyright 2020 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -29,7 +30,6 @@ class EnableVPNSettingHeader: UIView {
         $0.textAlignment = .center
         $0.appearanceTextColor = .white
         $0.font = UIFont.systemFont(ofSize: 15, weight: .regular)
-        $0.setContentHuggingPriority(UILayoutPriority(100), for: .vertical)
     }
     
     private let enableButton = RoundInterfaceButton(type: .roundedRect).then {

@@ -8,7 +8,6 @@ import Shared
 import BraveShared
 
 struct BraveVPNCommonUI {
-    static let appLaunchesToShowVPNPopup = 3
     
     struct UX {
         static let purpleBackgroundColor = #colorLiteral(red: 0.1529411765, green: 0.08235294118, blue: 0.368627451, alpha: 1)
@@ -40,13 +39,15 @@ struct BraveVPNCommonUI {
         }
         
         static func checkmarkView(string: String, textColor: UIColor, font: UIFont) -> UIStackView {
-            return UIStackView().then { stackView in
+            UIStackView().then { stackView in
                 stackView.alignment = .top
                 stackView.spacing = 4
                 
                 let image = UIImageView(image: #imageLiteral(resourceName: "vpn_checkmark")).then {
                     $0.contentMode = .scaleAspectFit
-                    $0.snp.makeConstraints { make in make.size.equalTo(24) }
+                    $0.snp.makeConstraints { make in
+                        make.size.equalTo(24)
+                    }
 
                 }
                 stackView.addArrangedSubview(image)

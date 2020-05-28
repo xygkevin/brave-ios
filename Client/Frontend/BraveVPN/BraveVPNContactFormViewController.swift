@@ -21,7 +21,7 @@ class BraveVPNContactFormViewController: TableViewController {
         super.init(style: .grouped)
     }
     
-    struct ContactForm {
+    private struct ContactForm {
         var hostname: String?
         var subscriptionType: String?
         var receipt: String?
@@ -32,7 +32,8 @@ class BraveVPNContactFormViewController: TableViewController {
         var issue: String?
     }
     
-    enum IssueType: String, RepresentableOptionType, CaseIterable {
+    /// User can choose an issue from predefined list or write their own in email body.
+    private enum IssueType: String, RepresentableOptionType, CaseIterable {
         case deviceCheck
         case otherConnectionProblems
         case noInternet
@@ -170,11 +171,16 @@ class BraveVPNContactFormViewController: TableViewController {
         
         let sendButton = Row(text: Strings.VPN.contactFormSendButton, selection: { [weak self] in
             guard let self = self else { return }
-            if !MFMailComposeViewController.canSendMail() { return }
+            if !MFMailComposeViewController.canSendMail() {
+                log.error("Can't send email on this device")
+                return
+            }
+            
             let mail = MFMailComposeViewController().then {
                 $0.mailComposeDelegate = self
                 $0.setToRecipients([self.supportEmail])
             }
+            
             mail.setMessageBody(self.composeEmailBody(with: self.contactForm), isHTML: false)
             self.present(mail, animated: true)
         }, cellClass: CenteredButtonCell.self)

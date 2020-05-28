@@ -1,10 +1,7 @@
-//
-//  GRDGatewayAPIResponse.h
-//  Guardian
-//
-//  Created by will on 4/29/19.
-//  Copyright © 2019 Sudo Security Group Inc. All rights reserved.
-//
+// Copyright 2020 The Brave Authors. All rights reserved.
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #import <Foundation/Foundation.h>
 
@@ -16,6 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSInteger, GRDGatewayAPIResponseStatus) {
     GRDGatewayAPISuccess,
     GRDGatewayAPIServerOK,
+    GRDGatewayAPIServerNotOK,
     GRDGatewayAPIReceiptNeedsSandboxEnv, // status == 21007
     GRDGatewayAPIReceiptNeedsProductionEnv, // status == 21008
     GRDGatewayAPIReceiptValidateReqError, // 'iap-server-error' / 'iap-post-request-failed' [NOT IMPLIMENTED IN CODE YET]
@@ -53,8 +51,8 @@ typedef NS_ENUM(NSInteger, GRDGatewayAPIResponseStatus) {
 @property (nonatomic, retain) NSString *apiDeviceIdentifier;
 @property (nonatomic, retain) NSString *vpnHostname;
 @property (nonatomic, retain) NSArray *alertsArray;
-@property (nonatomic, retain, nullable) NSDate *receiptExpirationDate;
-@property (nonatomic, retain, nullable) NSString *receiptProductID;
+@property (nonatomic, retain) NSDate *receiptExpirationDate;
+@property (nonatomic, retain) NSString *receiptProductID;
 @property (nonatomic) BOOL receiptIndicatesFreeTrialUsed;
 @property (nonatomic) BOOL receiptHasActiveSubscription;
 

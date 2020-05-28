@@ -44,10 +44,10 @@ extension Strings {
                                                   bundle: .braveShared, value: "Terms of Service", comment: "")
     public static let monthAbbreviation =
         NSLocalizedString("monthAbbreviation", tableName: "BraveShared",
-                          bundle: .braveShared, value: "mo.", comment: "Abbreviation for 'Month', use full word' Month' if this wordd can't be shortened in your language")
+                          bundle: .braveShared, value: "mo.", comment: "Abbreviation for 'Month', use full word' Month' if this word can't be shortened in your language")
     public static let yearAbbreviation =
         NSLocalizedString("yearAbbreviation", tableName: "BraveShared",
-                          bundle: .braveShared, value: "yr.", comment: "Abbreviation for 'Year', use full word' Yeara' if this wordd can't be shortened in your language")
+                          bundle: .braveShared, value: "yr.", comment: "Abbreviation for 'Year', use full word' Yeara' if this word can't be shortened in your language")
 }
 
 // MARK:-  UIAlertControllerExtensions.swift
@@ -816,7 +816,7 @@ extension Strings {
         public static let freeTrial =
             NSLocalizedString("vpn.freeTrial",
                               bundle: .braveShared,
-                              value: "All plans include a free 5-day trial!",
+                              value: "All plans include a free 7-day trial!",
                               comment: "")
         
         public static let restorePurchases =
@@ -923,12 +923,11 @@ extension Strings {
                               comment: "Text for a checkbox to present the user benefits for using Brave VPN")
         
         public static let popupCheckmark247Support =
-            NSLocalizedString("vpn.popupCheckmarkSecureConnections",
+            NSLocalizedString("vpn.popupCheckmark247Support",
                               bundle: .braveShared,
                               value: "24/7 support",
                               comment: "Text for a checkbox to present the user benefits for using Brave VPN")
         
-        // TODO: Replace proper brand name for the vpn.
         public static let installProfileBody =
             NSLocalizedString("vpn.installProfileBody",
                               bundle: .braveShared,
@@ -966,7 +965,7 @@ extension Strings {
                               comment: "Header title for vpn settings subscription section.")
         
         public static let settingsServerSection =
-            NSLocalizedString("vpn.settingsSubscriptionSection",
+            NSLocalizedString("vpn.settingsServerSection",
                               bundle: .braveShared,
                               value: "Server",
                               comment: "Header title for vpn settings server section.")
@@ -1222,5 +1221,17 @@ extension Strings {
                               bundle: .braveShared,
                               value: "Expired",
                               comment: "Text to show user when their vpn plan has expired")
+        
+        public static let resetVpnErrorTitle =
+            NSLocalizedString("vpn.resetVpnErrorTitle",
+                              bundle: .braveShared,
+                              value: "Error",
+                              comment: "Title for error message when vpn configuration reset fails.")
+        
+        public static let resetVpnErrorBody =
+            NSLocalizedString("vpn.resetVpnErrorBody",
+                              bundle: .braveShared,
+                              value: "Failed to reset vpn configuration, please try again later.",
+                              comment: "Message to show when vpn configuration reset fails.")
     }
 }

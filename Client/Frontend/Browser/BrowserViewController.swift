@@ -243,7 +243,6 @@ class BrowserViewController: UIViewController {
         Preferences.Privacy.blockAllCookies.observe(from: self)
         Preferences.Rewards.hideRewardsIcon.observe(from: self)
         Preferences.NewTabPage.selectedCustomTheme.observe(from: self)
-        Preferences.VPN.expirationDate.observe(from: self)
         // Lists need to be compiled before attempting tab restoration
         contentBlockListDeferred = ContentBlockerHelper.compileBundledLists()
         
@@ -956,7 +955,7 @@ class BrowserViewController: UIViewController {
     private func presentVPNCallout() {
         let onboardingNotCompleted =
             Preferences.General.basicOnboardingCompleted.value == OnboardingState.completed.rawValue
-        let notEnoughAppLaunches = Preferences.VPN.appLaunchCountForVPNPopup.value < BraveVPNCommonUI.appLaunchesToShowVPNPopup
+        let notEnoughAppLaunches = Preferences.VPN.appLaunchCountForVPNPopup.value < BraveVPN.appLaunchesToShowVPNPopup
         let showedPopup = Preferences.VPN.popupShowed
 
         if onboardingNotCompleted
@@ -973,7 +972,7 @@ class BrowserViewController: UIViewController {
             $0.modalPresentationStyle = .overFullScreen
         }
         
-        popup.enableTapped = { [weak self] in
+        popup.enableVPNTapped = { [weak self] in
             guard let vc = BraveVPN.vpnState.enableVPNDestinationVC else { return }
             let nav = DismissableNavigationViewController(rootViewController: vc)
             nav.navigationBar.topItem?.rightBarButtonItem =
@@ -3660,10 +3659,6 @@ extension BrowserViewController: PreferencesObserver {
         case Preferences.NewTabPage.selectedCustomTheme.key:
             Preferences.NTP.ntpCheckDate.value = nil
             backgroundDataSource.startFetching()
-        case Preferences.VPN.expirationDate.key:
-            if BraveVPN.hasExpired == true {
-                BraveVPN.clearConfiguration()
-            }
         default:
             log.debug("Received a preference change for an unknown key: \(key) on \(type(of: self))")
             break

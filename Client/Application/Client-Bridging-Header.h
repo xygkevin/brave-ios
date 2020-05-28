@@ -24,5 +24,7 @@
 #import "GRDServerManager.h"
 #import "GRDGatewayAPIResponse.h"
 #import "GRDVPNHelper.h"
+#import "VPNConstants.h"
+#import "GRDSubscriberCredential.h"
 
 #endif

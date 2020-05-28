@@ -22,7 +22,7 @@ private class MenuCell: UITableViewCell {
     let toggleButton = UISwitch().then {
         $0.isHidden = true
         $0.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        // At the moment, this toggle is only for visuals, tapping on the whole cell is not different
+        // At the moment, this toggle is only for visuals, tapping on the cell itself is not different
         // than tapping on the switch.
         $0.isUserInteractionEnabled = false
     }
@@ -178,7 +178,6 @@ class MenuViewController: UITableViewController {
         switch button {
         case .vpn:
             guard let menuCell = cell as? MenuCell else { return }
-            // Reverse the value, if the toggle is currently disabled, tapping it should enable it.
             openVPNAction(menuCell: menuCell)
         case .bookmarks: openBookmarks()
         case .history: openHistory()
@@ -277,7 +276,7 @@ class MenuViewController: UITableViewController {
     }
     
     private func openVPNAction(menuCell: MenuCell) {
-        let enable = !menuCell.toggleButton.isOn
+        let enabled = !menuCell.toggleButton.isOn
         let vpnState = BraveVPN.vpnState
         
         if !VPNProductInfo.isComplete {
@@ -297,11 +296,12 @@ class MenuViewController: UITableViewController {
         case .notPurchased, .purchased, .expired:
             guard let vc = vpnState.enableVPNDestinationVC else { return }
             open(vc, doneButton: DoneButton(style: .cancel, position: .right), allowSwipeToDismiss: true)
+            // User opened a vpn view, no need to remind them about it using vpn callout popup.
             Preferences.VPN.popupShowed.value = true
         case .installed:
-            menuCell.toggleButton.isOn = enable
+            menuCell.toggleButton.isOn = enabled
             
-            enable ? BraveVPN.enableVPN() : BraveVPN.disableVPN()
+            enabled ? BraveVPN.reconnect() : BraveVPN.disconnect()
             dismissView()
         }
     }

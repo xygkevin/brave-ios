@@ -270,6 +270,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UIViewControllerRestorati
         
         if isFirstLaunch {
             profile?.searchEngines.regionalSearchEngineSetup()
+            
+            // Vpn credentials are kept in keychain and persist between app reinstalls.
+            // To avoid unexpected problems we clear all vpn keychain items.
+            // New set of keychain items will be created on purchase or iap restoration.
+            BraveVPN.clearCredentials()
         }
         
         if let urp = UserReferralProgram.shared {

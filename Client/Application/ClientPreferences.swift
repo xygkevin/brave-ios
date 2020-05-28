@@ -138,12 +138,12 @@ extension Preferences {
     final class VPN {
         static let popupShowed = Option<Bool>(key: "vpn.popup-showed", default: false)
         static let appLaunchCountForVPNPopup = Option<Int>(key: "vpn.popup-launch-count", default: 0)
-        static let expirationDate = Option<Date?>(key: "vpn.expiration-date", default: nil)
         /// We get it from Guardian's servers.
         static let lastPurchaseProductId = Option<String?>(key: "vpn.last-purchase-id", default: nil)
-        /// This flag is set to true after first successful purchase or restoration.
-        /// This handles one edge case where user reinstalls the app while still having a valid receipt.
-        static let purchasedOrRestoredProduct = Option<Bool>(key: "vpn.purchased-or-restored", default: false)
+        /// When the current subscription plan expires. It is nil if the user has not bought any vpn plan yet.
+        /// In case of receipt expiration this date might be set to some old date(like year 1970)
+        /// to make sure vpn expiration logic will be called.
+        static let expirationDate = Option<Date?>(key: "vpn.expiration-date", default: nil)
     }
 }
 

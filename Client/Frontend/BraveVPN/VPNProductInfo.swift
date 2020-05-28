@@ -1,3 +1,4 @@
+// Copyright 2020 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -5,6 +6,8 @@
 import Foundation
 import StoreKit
 import Shared
+
+private let log = Logger.browserLogger
 
 class VPNProductInfo: NSObject {
     // Prices are fetched once per launch and kept in memory.
@@ -25,32 +28,10 @@ class VPNProductInfo: NSObject {
     
     private let productRequest: SKProductsRequest
     
+    /// These product ids work only on release channel.
     struct ProductIdentifiers {
-        static var monthlySub: String {
-            switch AppConstants.buildChannel {
-            case .enterprise:
-                return "com.brave.ios.browser.dev.vpn.monthly"
-            case .release:
-                return "bravevpn.monthly"
-            case .beta, .developer:
-                // return ""
-                // FIXME: Remove my personal product id, TESTING ONLY
-                return "com.bucci.vpn.monthly"
-            }
-        }
-        
-        static var yearlySub: String {
-            switch AppConstants.buildChannel {
-            case .enterprise:
-                return "com.brave.ios.browser.dev.vpn.yearly"
-            case .release:
-                return "bravevpn.yearly"
-            case .beta, .developer:
-                // return ""
-                // FIXME: Remove my personal product id, TESTING ONLY
-                return "com.bucci.vpn.yearly"
-            }
-        }
+        static let monthlySub = "bravevpn.monthly"
+        static let yearlySub = "bravevpn.yearly"
         
         static let all = Set<String>(arrayLiteral: monthlySub, yearlySub)
     }
@@ -81,7 +62,7 @@ extension VPNProductInfo: SKProductsRequestDelegate {
     }
     
     func request(_ request: SKRequest, didFailWithError error: Error) {
-        print(error)
+        log.error("SKProductsRequestDelegate error: \(error)" )
     }
 }
 

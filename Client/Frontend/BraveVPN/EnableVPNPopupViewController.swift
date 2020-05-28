@@ -1,3 +1,4 @@
+// Copyright 2020 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -8,7 +9,7 @@ import BraveShared
 
 class EnableVPNPopupViewController: UIViewController {
     
-    var enableTapped: (() -> Void)?
+    var enableVPNTapped: (() -> Void)?
     
     private let contentView = ContentView()
     
@@ -44,7 +45,7 @@ class EnableVPNPopupViewController: UIViewController {
     
     @objc func enableVPNAction() {
         dismiss(animated: false)
-        enableTapped?()
+        enableVPNTapped?()
     }
     
     @objc func backgroundTapped() {
@@ -58,7 +59,6 @@ private class ContentView: UIView {
         $0.axis = .vertical
         $0.distribution = .equalSpacing
         $0.spacing = 24
-        $0.translatesAutoresizingMaskIntoConstraints = false
     }
     
     private let titleStackView = UIStackView().then { stackView in
@@ -66,7 +66,7 @@ private class ContentView: UIView {
         stackView.spacing = 4
         stackView.alignment = .center
         
-        let titleLabel = UILabel().then {
+        let titleLabel = BraveVPNCommonUI.Views.ShrinkableLabel().then {
             $0.text = Strings.VPN.vpnName
             $0.appearanceTextColor = .black
             $0.textAlignment = .center
@@ -124,7 +124,9 @@ private class ContentView: UIView {
         translatesAutoresizingMaskIntoConstraints = false
         
         insertSubview(backgroundImage, at: 0)
-        backgroundImage.snp.makeConstraints { $0.leading.top.trailing.equalToSuperview() }
+        backgroundImage.snp.makeConstraints {
+            $0.leading.top.trailing.equalToSuperview()
+        }
         
         backgroundColor = .white
         
@@ -135,16 +137,12 @@ private class ContentView: UIView {
         clipsToBounds = true
         layer.cornerRadius = 8
         
-        mainStackView.snp.makeConstraints { $0.edges.equalToSuperview().inset(36) }
+        mainStackView.snp.makeConstraints {
+            $0.edges.equalToSuperview().inset(36)
+        }
     }
     
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        if frame == .zero { return }
-    }
 }
 

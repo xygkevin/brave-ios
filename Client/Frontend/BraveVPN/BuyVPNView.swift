@@ -1,3 +1,4 @@
+// Copyright 2020 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -31,12 +32,10 @@ extension BuyVPNViewController {
         private let mainStackView = UIStackView().then {
             $0.axis = .vertical
             $0.distribution = .equalSpacing
-            $0.translatesAutoresizingMaskIntoConstraints = false
         }
         
         private let contentStackView = UIStackView().then {
             $0.axis = .vertical
-            $0.translatesAutoresizingMaskIntoConstraints = false
             $0.spacing = 4
         }
         
@@ -60,7 +59,7 @@ extension BuyVPNViewController {
             $0.numberOfPages = 3
         }
         
-        private lazy var plansStackView = UIStackView().then { stackView in
+        private lazy var vpnPlansStackView = UIStackView().then { stackView in
             let contentStackView = UIStackView()
             contentStackView.axis = .vertical
             contentStackView.spacing = 10
@@ -133,7 +132,7 @@ extension BuyVPNViewController {
              verticalFlexibleSpace(maxHeight: 48, priority: 100),
              pageControlStackView,
              verticalFlexibleSpace(maxHeight: 48, priority: 80),
-             plansStackView]
+             vpnPlansStackView]
                 .forEach(contentStackView.addArrangedSubview(_:))
             
             [UIView.spacer(.vertical, amount: 1),
@@ -187,7 +186,7 @@ extension BuyVPNViewController {
             checkmarksStackView.setNeedsLayout()
             checkmarksStackView.layoutIfNeeded()
             
-            checkmarksStackView.bounds = CGRect(size: checkmarksStackView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize))
+            checkmarksStackView.bounds = CGRect(origin: .zero, size: checkmarksStackView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize))
         }
         
         private let checkmarksStackView = UIStackView().then {
@@ -195,10 +194,9 @@ extension BuyVPNViewController {
         }
         
         @objc func pageControlTapped(_ sender: UIPageControl) {
-            UIView.animate(withDuration: 0.3) {
-                self.featuresScrollView.contentOffset =
-                    CGPoint(x: self.featuresScrollView.frame.width * CGFloat(sender.currentPage), y: 0)
-            }
+            featuresScrollView.setContentOffset(
+                CGPoint(x: self.featuresScrollView.frame.width * CGFloat(sender.currentPage), y: 0),
+                animated: true)
         }
     }
 }
@@ -214,7 +212,9 @@ extension BuyVPNViewController.View: UIScrollViewDelegate {
         }
         
         let pageNumber = targetContentOffset.pointee.x / scrollView.frame.width
-        checkmarksPage = max(0, Int(pageNumber))
+        let cappedPageNumber = min(Int(pageNumber), pageControl.numberOfPages)
+        
+        checkmarksPage = max(0, cappedPageNumber)
     }
 }
 
@@ -230,8 +230,6 @@ private class CheckmarksView: UIView {
         $0.spacing = 16
         $0.alignment = .leading
         $0.distribution = .equalSpacing
-        
-        $0.translatesAutoresizingMaskIntoConstraints = false
     }
     
     init(checkmarks: [String]) {
@@ -246,29 +244,26 @@ private class CheckmarksView: UIView {
                 stackView.addArrangedSubview(
                     BraveVPNCommonUI.Views.checkmarkView(string: checkmark,
                                                        textColor: .white,
-                                                       font: UIFont.systemFont(ofSize: 16, weight: .semibold)))
+                                                       font: .systemFont(ofSize: 16, weight: .semibold)))
             } else {
                 // Add empty label so the view has the same constaints even if not all checkboxes are filled.
-                let emptyLabel = UILabel().then { $0.text = " " }
+                let emptyLabel = UILabel().then {
+                    $0.text = " "
+                    $0.isAccessibilityElement = false
+                }
                 stackView.addArrangedSubview(emptyLabel)
             }
         }
-    }
-    
-    @available(*, unavailable)
-    required init(coder: NSCoder) { fatalError() }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
         
-        //if frame == .zero { return }
-        
-        stackView.snp.remakeConstraints {
+        stackView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(24)
             $0.top.equalToSuperview().inset(8)
             $0.bottom.equalToSuperview()
         }
     }
+    
+    @available(*, unavailable)
+    required init(coder: NSCoder) { fatalError() }
     
     private class CheckmarkInsetLabel: UILabel {
         override func draw(_ rect: CGRect) {
@@ -302,18 +297,20 @@ extension BuyVPNViewController {
             }
         }
         
+        private let gradientView = GradientView(colors: [#colorLiteral(red: 0.2196078431, green: 0.1176470588, blue: 0.5215686275, alpha: 1), #colorLiteral(red: 0.4078431373, green: 0.2705882353, blue: 0.8196078431, alpha: 1)],
+                                                positions: [0, 1],
+                                                startPoint: CGPoint(x: 0, y: 0),
+                                                endPoint: CGPoint(x: 1, y: 0))
+        
         enum SubscriptionType { case monthly, yearly }
         
         private let title: String
         private var disclaimer: String?
-        private var detail: String
-        private var price: String
+        private var detail: String = ""
+        private var price: String = ""
         private var priceDiscount: String?
         
         init(type: SubscriptionType) {
-            price = ""
-            detail = ""
-            
             switch type {
             case .monthly:
                 title = Strings.VPN.monthlySubTitle
@@ -339,6 +336,9 @@ extension BuyVPNViewController {
                         break
                 }
                 
+                // Calculating savings of the annual plan.
+                // Since different countries have different price brackets in App Store
+                // we have to calculate it manually.
                 let yearlyDouble = yearlyProduct.price.doubleValue
                 let discountDouble = monthlyProduct.price.multiplying(by: 12).doubleValue
                 let discountSavingPercentage = 100 - Int((yearlyDouble * 100) / discountDouble)
@@ -366,7 +366,7 @@ extension BuyVPNViewController {
                 let titleLabel = BraveVPNCommonUI.Views.ShrinkableLabel().then {
                     $0.text = title
                     $0.appearanceTextColor = UX.primaryTextColor
-                    $0.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+                    $0.font = .systemFont(ofSize: 15, weight: .semibold)
                 }
                 
                 let titleStackView = UIStackView(arrangedSubviews: [titleLabel]).then {
@@ -378,7 +378,7 @@ extension BuyVPNViewController {
                         $0.text = disclaimer
                         $0.setContentHuggingPriority(UILayoutPriority(rawValue: 100), for: .horizontal)
                         $0.appearanceTextColor = UX.primaryTextColor
-                        $0.font = UIFont.systemFont(ofSize: 12, weight: .bold)
+                        $0.font = .systemFont(ofSize: 12, weight: .bold)
                         $0.backgroundColor = UX.disclaimerColor
                         $0.layer.cornerRadius = 4
                         $0.layer.masksToBounds = true
@@ -396,7 +396,7 @@ extension BuyVPNViewController {
                 let detailLabel = BraveVPNCommonUI.Views.ShrinkableLabel().then {
                     $0.text = detail
                     $0.appearanceTextColor = UX.secondaryTextColor
-                    $0.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+                    $0.font = .systemFont(ofSize: 15, weight: .regular)
                 }
                 
                 [titleStackView, detailLabel].forEach(stackView.addArrangedSubview(_:))
@@ -408,7 +408,7 @@ extension BuyVPNViewController {
                 let priceLabel = BraveVPNCommonUI.Views.ShrinkableLabel().then {
                     $0.text = price
                     $0.appearanceTextColor = UX.primaryTextColor
-                    $0.font = UIFont.systemFont(ofSize: 15, weight: .bold)
+                    $0.font = .systemFont(ofSize: 15, weight: .bold)
                 }
                 
                 var views: [UIView] = [priceLabel]
@@ -422,7 +422,7 @@ extension BuyVPNViewController {
                         
                         $0.attributedText = strikeThroughText
                         $0.appearanceTextColor = #colorLiteral(red: 1, green: 1, blue: 0.9411764706, alpha: 1).withAlphaComponent(0.6)
-                        $0.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+                        $0.font = .systemFont(ofSize: 13, weight: .regular)
                         $0.textAlignment = .right
                     }
                     
@@ -436,18 +436,14 @@ extension BuyVPNViewController {
             
             addSubview(mainStackView)
             mainStackView.snp.makeConstraints { $0.edges.equalToSuperview().inset(16) }
+            
+            insertSubview(gradientView, at: 0)
+            gradientView.isUserInteractionEnabled = false
+            gradientView.snp.makeConstraints { $0.edges.equalToSuperview() }
         }
         
         @available(*, unavailable)
         required init(coder: NSCoder) { fatalError() }
-        
-        override func layoutSubviews() {
-            super.layoutSubviews()
-            
-            let gradient = UX.gradientOverlay
-            gradient.frame = bounds
-            layer.insertSublayer(gradient, at: 0)
-        }
         
         override var isHighlighted: Bool {
             didSet {

@@ -59,7 +59,7 @@ class EnableVPNSettingHeader: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        contentView.insertSubview(backgroundImage, at: 0)
+        contentView.addSubview(backgroundImage)
         backgroundImage.snp.makeConstraints { $0.edges.equalToSuperview() }
         
         addSubview(contentView)

@@ -123,7 +123,7 @@ private class ContentView: UIView {
         
         translatesAutoresizingMaskIntoConstraints = false
         
-        insertSubview(backgroundImage, at: 0)
+        addSubview(backgroundImage)
         backgroundImage.snp.makeConstraints {
             $0.leading.top.trailing.equalToSuperview()
         }

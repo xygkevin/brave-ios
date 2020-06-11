@@ -249,10 +249,7 @@ class MenuViewController: UITableViewController {
         let nav = SettingsNavigationController(rootViewController: viewController)
         
         // All menu views should be opened in portrait on iPhones.
-        if UIDevice.current.userInterfaceIdiom != .pad && UIApplication.shared.statusBarOrientation.isLandscape {
-            let value = UIInterfaceOrientation.portrait.rawValue
-            UIDevice.current.setValue(value, forKey: "orientation")
-        }
+        UIDevice.current.forcePortraitIfIphone(for: UIApplication.shared)
         
         if #available(iOS 13.0, *) {
             nav.isModalInPresentation = !allowSwipeToDismiss

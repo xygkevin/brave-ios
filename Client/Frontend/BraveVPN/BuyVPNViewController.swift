@@ -56,6 +56,8 @@ class BuyVPNViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        title = Strings.VPN.vpnName
+        
         buyVPNView.monthlySubButton
             .addTarget(self, action: #selector(monthlySubscriptionAction), for: .touchUpInside)
         
@@ -77,8 +79,6 @@ class BuyVPNViewController: UIViewController {
     }
     
     private func styleNavigationBar() {
-        title = Strings.VPN.vpnName
-                        
         navigationController?.navigationBar.do {
             $0.tintColor = .white
             $0.barTintColor = BraveVPNCommonUI.UX.purpleBackgroundColor
@@ -158,18 +158,27 @@ extension BuyVPNViewController: IAPObserverDelegate {
         }
     }
     
-    func purchaseFailed(error: SKError?) {
+    func purchaseFailed(error: IAPObserver.PurchaseError) {
         DispatchQueue.main.async {
             self.isLoading = false
             
             // User intentionally tapped to cancel purchase , no need to show any alert on our side.
-            if error?.code == SKError.paymentCancelled {
+            if case .transactionError(let err) = error, err?.code == SKError.paymentCancelled {
                 return
             }
             
+            let code = { () -> Int  in
+                switch error {
+                case .transactionError(let err):
+                    return err?.code.rawValue ?? -1
+                case .receiptError:
+                    return -2
+                }
+            }()
+            
             // For all other errors, we attach associated code for easier debugging.
             // See SKError.h for list of all codes.
-            let message = "\(Strings.VPN.vpnErrorPurchaseFailedBody) (\(error?.code.rawValue ?? -1))"
+            let message = "\(Strings.VPN.vpnErrorPurchaseFailedBody) (\(code))"
             
             let alert = UIAlertController(title: Strings.VPN.vpnErrorPurchaseFailedTitle,
                                           message: message,

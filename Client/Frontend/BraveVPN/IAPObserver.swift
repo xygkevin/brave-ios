@@ -12,10 +12,15 @@ private let log = Logger.browserLogger
 
 protocol IAPObserverDelegate: AnyObject {
     func purchasedOrRestoredProduct()
-    func purchaseFailed(error: SKError?)
+    func purchaseFailed(error: IAPObserver.PurchaseError)
 }
 
 class IAPObserver: NSObject, SKPaymentTransactionObserver {
+    
+    enum PurchaseError {
+        case transactionError(error: SKError?)
+        case receiptError
+    }
     
     weak var delegate: IAPObserverDelegate?
 
@@ -33,14 +38,15 @@ class IAPObserver: NSObject, SKPaymentTransactionObserver {
                             self.delegate?.purchasedOrRestoredProduct()
                         } else {
                             // Receipt either expired or receipt validation returned some error.
-                            self.delegate?.purchaseFailed(error: nil)
+                            self.delegate?.purchaseFailed(error: .receiptError)
                         }
                     }
                 case .purchasing, .deferred:
                     log.debug("Received transaction state: purchasing")
                 case .failed:
                     log.debug("Received transaction state: failed")
-                    self.delegate?.purchaseFailed(error: transaction.error as? SKError)
+                    self.delegate?.purchaseFailed(
+                        error: .transactionError(error: transaction.error as? SKError))
                     SKPaymentQueue.default().finishTransaction(transaction)
                 @unknown default:
                     assertionFailure("Unknown transactionState")

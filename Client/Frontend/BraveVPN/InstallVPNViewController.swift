@@ -23,6 +23,7 @@ class InstallVPNViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = Strings.VPN.installTitle
         installVPNView.installVPNButton.addTarget(self, action: #selector(installVPNAction), for: .touchUpInside)
         navigationItem.setRightBarButton(.init(barButtonSystemItem: .cancel, target: self, action: #selector(dismissView)), animated: true)
     }
@@ -36,8 +37,6 @@ class InstallVPNViewController: UIViewController {
     }
     
     private func styleNavigationBar() {
-        title = Strings.VPN.installTitle
-                        
         navigationController?.navigationBar.do {
             $0.tintColor = .white
             $0.barTintColor = BraveVPNCommonUI.UX.purpleBackgroundColor

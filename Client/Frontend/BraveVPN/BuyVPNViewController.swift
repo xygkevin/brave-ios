@@ -27,6 +27,9 @@ class BuyVPNViewController: UIViewController {
         didSet {
             overlayView?.removeFromSuperview()
             
+            // Toggle 'restore' button.
+            navigationController?.navigationBar.topItem?.rightBarButtonItem?.isEnabled = !isLoading
+            
             // Prevent dismissing the modal by swipe when the VPN is being configured
             if #available(iOS 13.0, *) {
                 navigationController?.isModalInPresentation = isLoading == true
@@ -58,14 +61,15 @@ class BuyVPNViewController: UIViewController {
         
         title = Strings.VPN.vpnName
         
+        navigationController?.navigationBar.topItem?.rightBarButtonItem =
+            .init(title: Strings.VPN.restorePurchases, style: .done, target: self,
+                  action: #selector(restorePurchasesAction))
+        
         buyVPNView.monthlySubButton
             .addTarget(self, action: #selector(monthlySubscriptionAction), for: .touchUpInside)
         
         buyVPNView.yearlySubButton
             .addTarget(self, action: #selector(yearlySubscriptionAction), for: .touchUpInside)
-        
-        buyVPNView.restorePurchasesButton
-            .addTarget(self, action: #selector(restorePurchasesAction), for: .touchUpInside)
         
         (UIApplication.shared.delegate as? AppDelegate)?.iapObserver.delegate = self
     }

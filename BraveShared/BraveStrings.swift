@@ -822,7 +822,7 @@ extension Strings {
         public static let restorePurchases =
             NSLocalizedString("vpn.restorePurchases",
                               bundle: .braveShared,
-                              value: "Restore purchases",
+                              value: "Restore",
                               comment: "")
         
         public static let monthlySubTitle =
@@ -859,7 +859,7 @@ extension Strings {
         public static let checkboxBlockAds =
             NSLocalizedString("vpn.checkboxBlockAds",
                               bundle: .braveShared,
-                              value: "Block ads & trackers across all apps",
+                              value: "Block ads and trackers across all apps on device",
                               comment: "Text for a checkbox to present the user benefits for using Brave VPN")
         
         public static let checkboxProtectConnections =
@@ -902,6 +902,12 @@ extension Strings {
             NSLocalizedString("vpn.checkboxWhoAreYou",
                               bundle: .braveShared,
                               value: "VPN server doesn't know who you are",
+                              comment: "Text for a checkbox to present the user benefits for using Brave VPN")
+        
+        public static let checkboxDeviceLimit =
+            NSLocalizedString("vpn.checkboxDeviceLimit",
+                              bundle: .braveShared,
+                              value: "Works across all connected Apple devices",
                               comment: "Text for a checkbox to present the user benefits for using Brave VPN")
         
         public static let installTitle =
@@ -1023,6 +1029,12 @@ extension Strings {
                               bundle: .braveShared,
                               value: "Enable",
                               comment: "Button text to enable Brave VPN")
+        
+        public static let buyButton =
+            NSLocalizedString("vpn.buyButton",
+                              bundle: .braveShared,
+                              value: "Buy",
+                              comment: "Button text to buy Brave VPN")
         
         public static let settingHeaderBody =
             NSLocalizedString("vpn.settingHeaderBody",
@@ -1168,16 +1180,10 @@ extension Strings {
                               value: "Send",
                               comment: "Button name to send contact form.")
         
-        public static let contactFormIssueDeviceCheck =
-            NSLocalizedString("vpn.contactFormIssueDeviceCheck",
-                              bundle: .braveShared,
-                              value: "Cannot connect(\"DeviceCheck\") error",
-                              comment: "Device check problems for contact form issue field.")
-        
         public static let contactFormIssueOtherConnectionError =
             NSLocalizedString("vpn.contactFormIssueOtherConnectionError",
                               bundle: .braveShared,
-                              value: "Cannot connect(Other error)",
+                              value: "Cannot connect to the VPN (Other error)",
                               comment: "Other connection problem for contact form issue field.")
         
         public static let contactFormIssueNoInternet =
@@ -1233,5 +1239,47 @@ extension Strings {
                               bundle: .braveShared,
                               value: "Failed to reset vpn configuration, please try again later.",
                               comment: "Message to show when vpn configuration reset fails.")
+        
+        public static let contactFormDoNotEditText =
+            NSLocalizedString("vpn.contactFormDoNotEditText",
+                              bundle: .braveShared,
+                              value: "Please do not edit any information below",
+                              comment: "Text to tell user to not modify support info below email's body.")
+        
+        public static let contactFormTitle =
+            NSLocalizedString("vpn.contactFormTitle",
+                              bundle: .braveShared,
+                              value: "Brave Firewall + VPN Issue",
+                              comment: "Title for contact form email.")
+        
+        public static let freeTrialDisclaimer =
+            NSLocalizedString("vpn.freeTrialDisclaimer",
+                              bundle: .braveShared,
+                              value: "Try free for 7 days. After 7 days, you will be charged the plan price. ",
+                              comment: "Disclaimer about free trial")
+        
+        public static let iapDisclaimer =
+            NSLocalizedString("vpn.iapDisclaimer",
+                              bundle: .braveShared,
+                              value: "All subscriptions are auto-renewed but can be cancelled before renewal.",
+                              comment: "Disclaimer about in app subscription")
+        
+        public static let installSuccessPopup =
+            NSLocalizedString("vpn.installSuccessPopup",
+                              bundle: .braveShared,
+                              value: "VPN is now enabled",
+                              comment: "Popup that shows after user installs the vpn for the first time.")
+        
+        public static let vpnBackgroundNotificationTitle =
+            NSLocalizedString("vpn.vpnBackgroundNotificationTitle",
+                              bundle: .braveShared,
+                              value: "Brave Firewall + VPN is ON",
+                              comment: "Notification title to tell user that the vpn is turned on even in background")
+        
+        public static let vpnBackgroundNotificationBody =
+            NSLocalizedString("vpn.vpnBackgroundNotificationBody",
+                              bundle: .braveShared,
+                              value: "Even in the background, Brave will continue to protect you.",
+                              comment: "Notification title to tell user that the vpn is turned on even in background")
     }
 }

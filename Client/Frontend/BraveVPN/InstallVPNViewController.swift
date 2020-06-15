@@ -6,6 +6,7 @@
 import UIKit
 import Shared
 import BraveShared
+import Lottie
 
 class InstallVPNViewController: UIViewController {
     
@@ -47,14 +48,16 @@ class InstallVPNViewController: UIViewController {
     @objc func installVPNAction() {
         installVPNView.installVPNButton.isLoading = true
         
-        BraveVPN.createVPNConfiguration() { [weak self] status in
+        BraveVPN.connectOrMigrateToNewNode() { [weak self] status in
             DispatchQueue.main.async {
                 self?.installVPNView.installVPNButton.isLoading = false
             }
             
             switch status {
             case .success:
-                self?.dismiss(animated: true)
+                self?.dismiss(animated: true) {
+                    self?.showSuccessAlert()
+                }
             case .error(let type):
                 let alert = { () -> UIAlertController in
                     let okAction = UIAlertAction(title: Strings.OKString, style: .default)
@@ -82,5 +85,20 @@ class InstallVPNViewController: UIViewController {
                 }
             }
         }
+    }
+    
+    private func showSuccessAlert() {
+        let animation = AnimationView(name: "vpncheckmark").then {
+            $0.bounds = CGRect(x: 0, y: 0, width: 300, height: 200)
+            $0.contentMode = .scaleAspectFill
+            $0.play()
+        }
+        
+        let popup = AlertPopupView(imageView: animation,
+                                   title: Strings.VPN.installSuccessPopup, message: "",
+                                   titleWeight: .semibold, titleSize: 18,
+                                   dismissHandler: { true })
+        
+        popup.showWithType(showType: .flyUp)
     }
 }

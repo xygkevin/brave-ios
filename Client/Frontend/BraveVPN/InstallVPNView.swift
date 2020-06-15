@@ -21,16 +21,21 @@ extension InstallVPNViewController {
             $0.backgroundColor = BraveVPNCommonUI.UX.purpleBackgroundColor
             
             let image = UIImageView(image: #imageLiteral(resourceName: "install_vpn_image")).then { img in
-                img.contentMode = .scaleAspectFit
+                img.contentMode = .scaleAspectFill
                 img.setContentHuggingPriority(.required, for: .vertical)
                 img.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
             }
             
+            $0.snp.makeConstraints { make in
+                make.height.greaterThanOrEqualTo(250)
+            }
+            
             $0.addSubview(image)
             image.snp.makeConstraints { make in
-                make.leading.trailing.bottom.equalToSuperview()
-                make.top.equalToSuperview().inset(18)
+                make.edges.equalToSuperview()
             }
+            
+            image.clipsToBounds = true
             
             $0.setContentHuggingPriority(.required, for: .vertical)
             $0.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
@@ -41,7 +46,7 @@ extension InstallVPNViewController {
             let contentStackView = UIStackView().then { stackView in
                 stackView.axis = .vertical
                 stackView.distribution = .equalSpacing
-                stackView.spacing = 4
+                stackView.spacing = 16
                 stackView.alignment = .center
             }
             
@@ -49,19 +54,19 @@ extension InstallVPNViewController {
                 stackView.axis = .vertical
                 stackView.spacing = 8
                 
-                let titleLabel = UILabel().then { label in
+                let titleLabel = BraveVPNCommonUI.Views.ShrinkableLabel().then { label in
                     label.text = Strings.VPN.installProfileTitle
                     label.textAlignment = .center
-                    label.font = .systemFont(ofSize: 17, weight: .medium)
+                    label.font = .systemFont(ofSize: 20, weight: .medium)
                     label.appearanceTextColor = .black
                     label.minimumScaleFactor = 0.5
                     label.adjustsFontSizeToFitWidth = true
                 }
                 
-                let bodyLabel = UILabel().then { label in
+                let bodyLabel = BraveVPNCommonUI.Views.ShrinkableLabel().then { label in
                     label.text = Strings.VPN.installProfileBody
                     label.numberOfLines = 0
-                    label.font = .systemFont(ofSize: 15, weight: .medium)
+                    label.font = .systemFont(ofSize: 18, weight: .medium)
                     label.appearanceTextColor = #colorLiteral(red: 0.4745098039, green: 0.4745098039, blue: 0.4745098039, alpha: 1)
                 }
                 

@@ -975,7 +975,7 @@ class BrowserViewController: UIViewController {
         popup.enableVPNTapped = { [weak self] in
             guard let vc = BraveVPN.vpnState.enableVPNDestinationVC else { return }
             let nav = DismissableNavigationViewController(rootViewController: vc)
-            nav.navigationBar.topItem?.rightBarButtonItem =
+            nav.navigationBar.topItem?.leftBarButtonItem =
                 .init(barButtonSystemItem: .cancel, target: nav, action: #selector(nav.dismissViewController))
             
             let idiom = UIDevice.current.userInterfaceIdiom

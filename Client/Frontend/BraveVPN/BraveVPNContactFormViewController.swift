@@ -34,7 +34,6 @@ class BraveVPNContactFormViewController: TableViewController {
     
     /// User can choose an issue from predefined list or write their own in email body.
     private enum IssueType: String, RepresentableOptionType, CaseIterable {
-        case deviceCheck
         case otherConnectionProblems
         case noInternet
         case slowConnection
@@ -44,7 +43,6 @@ class BraveVPNContactFormViewController: TableViewController {
         
         var displayString: String {
             switch self {
-            case .deviceCheck: return Strings.VPN.contactFormIssueDeviceCheck
             case .otherConnectionProblems: return Strings.VPN.contactFormIssueOtherConnectionError
             case .noInternet: return Strings.VPN.contactFormIssueNoInternet
             case .slowConnection: return Strings.VPN.contactFormIssueSlowConnection
@@ -181,6 +179,7 @@ class BraveVPNContactFormViewController: TableViewController {
                 $0.setToRecipients([self.supportEmail])
             }
             
+            mail.setSubject(Strings.VPN.contactFormTitle)
             mail.setMessageBody(self.composeEmailBody(with: self.contactForm), isHTML: false)
             self.present(mail, animated: true)
         }, cellClass: CenteredButtonCell.self)
@@ -214,6 +213,8 @@ class BraveVPNContactFormViewController: TableViewController {
     private func composeEmailBody(with contactForm: ContactForm) -> String {
         var body = "\n\n"
         
+        body.append(contentsOf: "#### \(Strings.VPN.contactFormDoNotEditText) ####\n\n")
+        
         if let hostname = contactForm.hostname {
             body.append(Strings.VPN.contactFormHostname)
             body.append("\n\(hostname)\n\n")
@@ -222,11 +223,6 @@ class BraveVPNContactFormViewController: TableViewController {
         if let subcriptionType = contactForm.subscriptionType {
             body.append(Strings.VPN.contactFormSubscriptionType)
             body.append("\n\(subcriptionType)\n\n")
-        }
-        
-        if let receipt = contactForm.receipt {
-            body.append(Strings.VPN.contactFormAppStoreReceipt)
-            body.append("\n\(receipt)\n\n")
         }
         
         if let appVersion = contactForm.appVersion {
@@ -252,6 +248,11 @@ class BraveVPNContactFormViewController: TableViewController {
         if let issue = contactForm.issue {
             body.append(Strings.VPN.contactFormIssue)
             body.append("\n\(issue)\n\n")
+        }
+        
+        if let receipt = contactForm.receipt {
+            body.append(Strings.VPN.contactFormAppStoreReceipt)
+            body.append("\n\(receipt)\n\n")
         }
         
         return body

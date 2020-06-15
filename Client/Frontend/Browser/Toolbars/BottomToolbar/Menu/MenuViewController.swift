@@ -106,6 +106,9 @@ class MenuViewController: UITableViewController {
     private let bvc: BrowserViewController
     private let tab: Tab?
     
+    /// Keeping reference to it to monitor vpn status and set correct `isEnabled` status.
+    private var vpnMenuCell: MenuCell?
+    
     private lazy var visibleButtons: [MenuButtons] = {
         let allButtons = MenuButtons.allCases
         
@@ -162,11 +165,18 @@ class MenuViewController: UITableViewController {
         
         preferredContentSize = CGSize(width: fit.width, height: fit.height + UX.topBottomInset * 2)
         
+        NotificationCenter.default.addObserver(self, selector: #selector(vpnConfigChanged),
+                                               name: .NEVPNStatusDidChange, object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - Table view data source
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
         
         guard let cell = tableView.cellForRow(at: indexPath) else { return }
         
@@ -210,6 +220,8 @@ class MenuViewController: UITableViewController {
                 case .installed(let enabled):
                     menuCell.toggleButton.isOn = enabled
                 }
+                
+                vpnMenuCell = menuCell
                 
                 return menuCell
             default:
@@ -292,14 +304,12 @@ class MenuViewController: UITableViewController {
         switch BraveVPN.vpnState {
         case .notPurchased, .purchased, .expired:
             guard let vc = vpnState.enableVPNDestinationVC else { return }
-            open(vc, doneButton: DoneButton(style: .cancel, position: .right), allowSwipeToDismiss: true)
+            open(vc, doneButton: DoneButton(style: .cancel, position: .left), allowSwipeToDismiss: true)
             // User opened a vpn view, no need to remind them about it using vpn callout popup.
             Preferences.VPN.popupShowed.value = true
         case .installed:
-            menuCell.toggleButton.isOn = enabled
-            
+            // Do not modify UISwitch state here, update it based on vpn status observer.
             enabled ? BraveVPN.reconnect() : BraveVPN.disconnect()
-            dismissView()
         }
     }
     
@@ -352,6 +362,10 @@ class MenuViewController: UITableViewController {
     
     @objc func dismissView() {
         dismiss(animated: true)
+    }
+    
+    @objc func vpnConfigChanged() {
+        vpnMenuCell?.toggleButton.isOn = BraveVPN.isConnected
     }
 }
 

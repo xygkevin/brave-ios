@@ -13,13 +13,14 @@ extension BuyVPNViewController {
         
         private let checkmarkViewStrings =
             [Strings.VPN.checkboxBlockAds,
-             Strings.VPN.checkboxProtectConnections,
-             Strings.VPN.checkboxFast,
              Strings.VPN.checkboxNoSellout,
+             Strings.VPN.checkboxFast,
+             Strings.VPN.checkboxProtectConnections,
              Strings.VPN.checkboxNoIPLog,
              Strings.VPN.checkboxEncryption,
              Strings.VPN.checkboxPrivateID,
-             Strings.VPN.checkboxWhoAreYou]
+             Strings.VPN.checkboxWhoAreYou,
+             Strings.VPN.checkboxDeviceLimit]
         
         private var checkmarksPage = 0 {
             didSet {
@@ -68,9 +69,10 @@ extension BuyVPNViewController {
                 $0.text = Strings.VPN.freeTrial
                 $0.textAlignment = .center
                 $0.appearanceTextColor = .white
+                $0.isHidden = Preferences.VPN.freeTrialUsed.value
             }
             
-            [title, monthlySubButton, yearlySubButton, restorePurchasesButton]
+            [title, monthlySubButton, yearlySubButton, iapDisclaimer]
                 .forEach(contentStackView.addArrangedSubview(_:))
             
             contentStackView.setCustomSpacing(18, after: yearlySubButton)
@@ -97,14 +99,20 @@ extension BuyVPNViewController {
             $0.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         }
         
-        let restorePurchasesButton = UIButton(type: .system).then {
-            $0.setTitle(Strings.VPN.restorePurchases, for: .normal)
-            $0.appearanceTextColor = .white
-            $0.titleLabel?.textAlignment = .center
-        }
-        
-        private let backgroundImage = UIImageView(image: #imageLiteral(resourceName: "buy_vpn_background")).then {
-            $0.contentMode = .scaleAspectFill
+        let iapDisclaimer = BraveVPNCommonUI.Views.ShrinkableLabel().then {
+            var disclaimer = ""
+            
+            if !Preferences.VPN.freeTrialUsed.value {
+                disclaimer += "\(Strings.VPN.freeTrialDisclaimer) "
+            }
+            disclaimer += Strings.VPN.iapDisclaimer
+            
+            $0.text = disclaimer
+            $0.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+            $0.numberOfLines = 0
+            $0.lineBreakMode = .byWordWrapping
+            $0.textAlignment = .center
+            $0.textColor = UIColor.white.withAlphaComponent(0.6)
         }
         
         // MARK: - Init/Lifecycle
@@ -112,8 +120,6 @@ extension BuyVPNViewController {
         override init(frame: CGRect) {
             super.init(frame: frame)
             backgroundColor = BraveVPNCommonUI.UX.purpleBackgroundColor
-            
-            insertSubview(backgroundImage, at: 0)
             addSubview(mainStackView)
             
             let checkmarkSlices = checkmarkViewStrings.splitEvery(CheckmarksView.maxCheckmarksPerView)
@@ -139,11 +145,6 @@ extension BuyVPNViewController {
             contentStackView,
             UIView.spacer(.vertical, amount: 1)]
                .forEach(mainStackView.addArrangedSubview(_:))
-            
-            backgroundImage.snp.makeConstraints {
-                $0.leading.trailing.equalToSuperview()
-                $0.centerY.equalToSuperview()
-            }
             
             mainStackView.snp.makeConstraints {
                 $0.leading.trailing.top.equalTo(self.safeAreaLayoutGuide)
@@ -239,21 +240,20 @@ private class CheckmarksView: UIView {
         translatesAutoresizingMaskIntoConstraints = false
         addSubview(stackView)
         
+        // Add spacer views before and after checkmarks, so they are vertically centered
+        // if there's less than 3 of them.
+        stackView.addArrangedSubview(UIView.spacer(.vertical, amount: 1))
+        
         for i in 0...(CheckmarksView.maxCheckmarksPerView - 1) {
             if let checkmark = checkmarks[safe: i] {
                 stackView.addArrangedSubview(
                     BraveVPNCommonUI.Views.checkmarkView(string: checkmark,
                                                        textColor: .white,
                                                        font: .systemFont(ofSize: 16, weight: .semibold)))
-            } else {
-                // Add empty label so the view has the same constaints even if not all checkboxes are filled.
-                let emptyLabel = UILabel().then {
-                    $0.text = " "
-                    $0.isAccessibilityElement = false
-                }
-                stackView.addArrangedSubview(emptyLabel)
             }
         }
+        
+        stackView.addArrangedSubview(UIView.spacer(.vertical, amount: 1))
         
         stackView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(24)
@@ -284,23 +284,7 @@ extension BuyVPNViewController {
             static let primaryTextColor = #colorLiteral(red: 1, green: 1, blue: 0.9411764706, alpha: 1)
             static let secondaryTextColor = primaryTextColor.withAlphaComponent(0.7)
             static let discountTextColor = primaryTextColor.withAlphaComponent(0.6)
-            
-            static var gradientOverlay: CAGradientLayer {
-                CAGradientLayer().then {
-                    $0.colors = [#colorLiteral(red: 0.2196078431, green: 0.1176470588, blue: 0.5215686275, alpha: 1).cgColor, #colorLiteral(red: 0.4078431373, green: 0.2705882353, blue: 0.8196078431, alpha: 1).cgColor]
-                    $0.locations = [0, 1]
-                    
-                    // Make it horizontal
-                    $0.startPoint = CGPoint(x: 0, y: 0)
-                    $0.endPoint = CGPoint(x: 1, y: 0)
-                }
-            }
         }
-        
-        private let gradientView = GradientView(colors: [#colorLiteral(red: 0.2196078431, green: 0.1176470588, blue: 0.5215686275, alpha: 1), #colorLiteral(red: 0.4078431373, green: 0.2705882353, blue: 0.8196078431, alpha: 1)],
-                                                positions: [0, 1],
-                                                startPoint: CGPoint(x: 0, y: 0),
-                                                endPoint: CGPoint(x: 1, y: 0))
         
         enum SubscriptionType { case monthly, yearly }
         
@@ -349,6 +333,13 @@ extension BuyVPNViewController {
             }
             
             super.init(frame: .zero)
+            
+            switch type {
+            case .monthly:
+                backgroundColor = #colorLiteral(red: 0.231, green: 0.165, blue: 0.427, alpha: 1)
+            case .yearly:
+                backgroundColor = #colorLiteral(red: 0.31, green: 0.192, blue: 0.663, alpha: 1)
+            }
             
             layer.cornerRadius = 12
             layer.masksToBounds = true
@@ -436,10 +427,6 @@ extension BuyVPNViewController {
             
             addSubview(mainStackView)
             mainStackView.snp.makeConstraints { $0.edges.equalToSuperview().inset(16) }
-            
-            insertSubview(gradientView, at: 0)
-            gradientView.isUserInteractionEnabled = false
-            gradientView.snp.makeConstraints { $0.edges.equalToSuperview() }
         }
         
         @available(*, unavailable)

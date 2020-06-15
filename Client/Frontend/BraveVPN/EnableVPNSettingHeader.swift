@@ -21,7 +21,6 @@ class EnableVPNSettingHeader: UIView {
         $0.text = Strings.VPN.vpnName
         $0.appearanceTextColor = .white
         $0.font = UIFont.systemFont(ofSize: 19, weight: .semibold)
-        $0.setContentCompressionResistancePriority(.required, for: .vertical)
     }
     
     private let bodyLabel = UILabel().then {
@@ -30,15 +29,27 @@ class EnableVPNSettingHeader: UIView {
         $0.textAlignment = .center
         $0.appearanceTextColor = .white
         $0.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        $0.setContentHuggingPriority(.defaultHigh, for: .vertical)
     }
     
     private let enableButton = RoundInterfaceButton(type: .roundedRect).then {
-        $0.setTitle(Strings.VPN.enableButton, for: .normal)
+        
+        let title = { () -> String in
+            switch BraveVPN.vpnState {
+            case .notPurchased, .expired:
+                return Strings.VPN.buyButton
+            case .purchased, .installed:
+                return Strings.VPN.enableButton
+            }
+        }()
+        
+        $0.setTitle(title, for: .normal)
         $0.backgroundColor = BraveUX.braveOrange
         $0.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         $0.appearanceTextColor = .white
         $0.snp.makeConstraints { make in
             make.height.equalTo(44)
+            make.width.greaterThanOrEqualTo(120)
         }
         $0.contentEdgeInsets = UIEdgeInsets(top: 0, left: 25, bottom: 0, right: 25)
         $0.setContentCompressionResistancePriority(.required, for: .vertical)
@@ -70,7 +81,7 @@ class EnableVPNSettingHeader: UIView {
         mainStackView.snp.makeConstraints {
             $0.top.bottom.equalToSuperview().inset(16)
             $0.centerX.equalToSuperview()
-            $0.width.width.equalTo(250)
+            $0.width.equalTo(250)
         }
         
         contentView.snp.makeConstraints {

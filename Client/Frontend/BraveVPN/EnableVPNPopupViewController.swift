@@ -86,7 +86,7 @@ private class ContentView: UIView {
     }
     
     let enableButton = RoundInterfaceButton(type: .roundedRect).then {
-        $0.setTitle(Strings.VPN.enableButton, for: .normal)
+        $0.setTitle(Strings.VPN.buyButton, for: .normal)
         $0.backgroundColor = BraveUX.braveOrange
         $0.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         $0.appearanceTextColor = .white
@@ -125,7 +125,8 @@ private class ContentView: UIView {
         
         addSubview(backgroundImage)
         backgroundImage.snp.makeConstraints {
-            $0.leading.top.trailing.equalToSuperview()
+            $0.leading.trailing.equalToSuperview()
+            $0.top.equalToSuperview().inset(-34)
         }
         
         backgroundColor = .white

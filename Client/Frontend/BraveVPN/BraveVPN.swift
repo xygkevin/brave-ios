@@ -53,7 +53,10 @@ class BraveVPN {
     
     /// Sometimes restoring a purchase is triggered multiple times which leads to calling vpn.configure multiple times.
     /// This flags prevents configuring the vpn more than once.
-    private static var configurationPending = false
+    private static var firstTimeUserConfigPending = false
+    
+    /// Lock to prevent user from spamming connect/disconnect button.
+    private static var reconnectPending = false
     
     /// Status of creating vpn credentials on Guardian's servers.
     enum VPNUserCreationStatus {
@@ -122,6 +125,12 @@ class BraveVPN {
             return .expired(enabled: NEVPNManager.shared().isEnabled)
         }
         
+        // The app has not expired yet and nothing is in keychain.
+        // This means user has reinstalled the app while their vpn plan is still active.
+        if GRDKeychain.getPasswordString(forAccount: kKeychainStr_SubscriberCredential) == nil {
+            return .notPurchased
+        }
+        
         // No VPN config set means the user could buy the vpn but hasn't gone through the second screen
         // to install the vpn and connect to a server.
         if NEVPNManager.shared().connection.status == .invalid { return .purchased }
@@ -180,8 +189,16 @@ class BraveVPN {
     /// Reconnects to the vpn. Checks for server health first, if it's bad it tries to connect to another host.
     /// The vpn must be configured prior to that otherwise it does nothing.
     static func reconnect() {
+        if reconnectPending {
+            log.debug("Can't reconnect the vpn while another reconnect is pending.")
+            return
+        }
+        
+        reconnectPending = true
+        
         guard let credentialString =
             GRDKeychain.getPasswordString(forAccount: kKeychainStr_SubscriberCredential) else {
+            reconnectPending = false
             return
         }
         
@@ -190,23 +207,33 @@ class BraveVPN {
         let tokenExpirationDate = Date(timeIntervalSince1970: TimeInterval(credential.tokenExpirationDate))
         
         if Date() > tokenExpirationDate {
-            guard let host = hostname else { return }
+            guard let host = hostname else {
+                reconnectPending = false
+                return
+            }
             
             createNewSubscriberCredential(for: host) { status in
                 switch status {
                 case .success:
-                    createVPNConfiguration { completion in
+                    connectOrMigrateToNewNode { completion in
                         log.debug("vpn configuration status: \(completion)")
+                        reconnectPending = false
                     }
                 case .error:
                     log.error("Creating new credentials failed when tried to reconnect to the vpn.")
+                    reconnectPending = false
                 }
             }
         } else {
-            helper.configureAndConnectVPN { message, _ in
-                if message != nil {
-                    log.error(message)
+            connectOrMigrateToNewNode { completion in
+                switch completion {
+                case .error(let type):
+                    log.error("Failed to reconnect, error: \(type)")
+                case .success:
+                    log.debug("Reconnected to the VPN")
                 }
+                
+                reconnectPending = false
             }
         }
     }
@@ -214,6 +241,11 @@ class BraveVPN {
     /// Disconnects the vpn.
     /// The vpn must be configured prior to that otherwise it does nothing.
     static func disconnect() {
+        if reconnectPending {
+            log.debug("Can't disconnect the vpn while reconnect is still pending.")
+            return
+        }
+        
         helper.disconnectVPN()
     }
     
@@ -240,6 +272,12 @@ class BraveVPN {
             // Expiration date comes in milisecond while the iOS time interval uses seconds.
             Preferences.VPN.expirationDate.value = Date(timeIntervalSince1970: expireDate / 1000.0)
             
+            if let isTrial = receipt["is_trial_period"] as? String,
+                let isTrialBool = Bool(isTrial) {
+                
+                Preferences.VPN.freeTrialUsed.value = !isTrialBool
+            }
+            
             receiptHasExpired?(false)
         }
     }
@@ -248,12 +286,12 @@ class BraveVPN {
     /// Use `resetConfiguration` if you want to reconfigure the vpn for an existing user.
     /// If IAP is restored we treat it as first user configuration as well.
     static func configureFirstTimeUser(completion: ((VPNUserCreationStatus) -> Void)?) {
-        if configurationPending { return }
-        configurationPending = true
+        if firstTimeUserConfigPending { return }
+        firstTimeUserConfigPending = true
         
         serverManager.selectGuardianHost { host, error in
             guard let host = host, error == nil else {
-                configurationPending = false
+                firstTimeUserConfigPending = false
                 completion?(.error(type: .connectionProblems))
                 return
             }
@@ -261,7 +299,7 @@ class BraveVPN {
             GRDVPNHelper.saveAll(inOneBoxHostname: host)
             
             createNewSubscriberCredential(for: host) { status in
-                configurationPending = false
+                firstTimeUserConfigPending = false
                 completion?(status)
             }
         }
@@ -307,7 +345,7 @@ class BraveVPN {
     /// Creates a vpn configuration using Apple's `NEVPN*` api and connects to the vpn if successful.
     /// This method does not connect to the Guardian's servers unless there is no EAP credentials stored in keychain yet,
     /// in this case it tries to reconfigure the vpn before connecting to it.
-    static func createVPNConfiguration(completion: @escaping ((VPNConfigStatus) -> Void)) {
+    static func connectOrMigrateToNewNode(completion: @escaping ((VPNConfigStatus) -> Void)) {
         helper.configureAndConnectVPN { message, status in
             if status != .success {
                 completion(.error(type: .loadConfigError))
@@ -366,7 +404,7 @@ class BraveVPN {
                         return
                     }
                     
-                    createVPNConfiguration { status in
+                    connectOrMigrateToNewNode { status in
                         switch status {
                         case .error:
                             completion?(false)
@@ -394,5 +432,57 @@ class BraveVPN {
     static func clearCredentials() {
         GRDKeychain.removeGuardianKeychainItems()
         GRDKeychain.removeKeychanItem(forAccount: kKeychainStr_SubscriberCredential)
+    }
+    
+    static func sendVpnWorksInBackgroundNotification() {
+        
+        switch vpnState {
+        case .expired, .notPurchased, .purchased:
+            break
+        case .installed(let enabled):
+            if !enabled || Preferences.VPN.vpnWorksInBackgroundNotificationShowed.value {
+                break
+            }
+            
+            let center = UNUserNotificationCenter.current()
+            let notificationId = "vpnWorksInBackgroundNotification"
+            
+            center.requestAuthorization(options: [.provisional]) { granted, error in
+                if let error = error {
+                    log.error("Failed to request notifications permissions: \(error)")
+                    return
+                }
+                
+                if !granted {
+                    log.info("Not authorized to schedule a notification")
+                    return
+                }
+                
+                center.getPendingNotificationRequests { requests in
+                    if requests.contains(where: { $0.identifier == notificationId }) {
+                        // Already has one scheduled no need to schedule again.
+                        // Should not happens since we push the notification right away.
+                        return
+                    }
+                    
+                    let content = UNMutableNotificationContent()
+                    content.title = Strings.VPN.vpnBackgroundNotificationTitle
+                    content.body = Strings.VPN.vpnBackgroundNotificationBody
+                    
+                    // Empty `UNNotificationTrigger` sends the notification right away.
+                    let request = UNNotificationRequest(identifier: notificationId, content: content,
+                                                        trigger: nil)
+                    
+                    center.add(request) { error in
+                        if let error = error {
+                            log.error("Failed to add notification: \(error)")
+                            return
+                        }
+                        
+                        Preferences.VPN.vpnWorksInBackgroundNotificationShowed.value = true
+                    }
+                }
+            }
+        }
     }
 }

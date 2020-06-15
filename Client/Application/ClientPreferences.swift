@@ -144,6 +144,12 @@ extension Preferences {
         /// In case of receipt expiration this date might be set to some old date(like year 1970)
         /// to make sure vpn expiration logic will be called.
         static let expirationDate = Option<Date?>(key: "vpn.expiration-date", default: nil)
+        /// Whether free trial for the vpn expired for the user.
+        static let freeTrialUsed = Option<Bool>(key: "vpn.free-trial-used", default: false)
+        /// First time after user background the app after after installing vpn, we show a notification to say that the vpn
+        /// also works in background.
+        static let vpnWorksInBackgroundNotificationShowed =
+            Option<Bool>(key: "vpn.vpn-bg-notification-showed", default: false)
     }
 }
 

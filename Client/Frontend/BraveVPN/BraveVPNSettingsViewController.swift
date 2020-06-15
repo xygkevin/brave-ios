@@ -113,6 +113,10 @@ class BraveVPNSettingsViewController: TableViewController {
                                termsSection]
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     private var hostname: String {
         BraveVPN.hostname?.components(separatedBy: ".").first ?? "-"
     }

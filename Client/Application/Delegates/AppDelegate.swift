@@ -271,7 +271,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UIViewControllerRestorati
         if isFirstLaunch {
             profile?.searchEngines.regionalSearchEngineSetup()
             
-            // Vpn credentials are kept in keychain and persist between app reinstalls.
+            // VPN credentials are kept in keychain and persist between app reinstalls.
             // To avoid unexpected problems we clear all vpn keychain items.
             // New set of keychain items will be created on purchase or iap restoration.
             BraveVPN.clearCredentials()
@@ -377,7 +377,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UIViewControllerRestorati
 
     func applicationDidEnterBackground(_ application: UIApplication) {
         syncOnDidEnterBackground(application: application)
-        BraveVPN.sendVpnWorksInBackgroundNotification()
+        BraveVPN.sendVPNWorksInBackgroundNotification()
     }
 
     fileprivate func syncOnDidEnterBackground(application: UIApplication) {

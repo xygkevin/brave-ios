@@ -94,7 +94,7 @@ class SettingsViewController: TableViewController {
     private var sections: [Section] {
         var list = [Section]()
         
-        let shouldShowVpnSection = { () -> Bool in
+        let shouldShowVPNSection = { () -> Bool in
             if !VPNProductInfo.isComplete { return false }
             
             switch BraveVPN.vpnState {
@@ -105,7 +105,7 @@ class SettingsViewController: TableViewController {
             }
         }()
         
-        if shouldShowVpnSection {
+        if shouldShowVPNSection {
             list.append(enableBraveVPNSection)
         }
         list.append(generalSection)

@@ -1228,14 +1228,14 @@ extension Strings {
                               value: "Expired",
                               comment: "Text to show user when their vpn plan has expired")
         
-        public static let resetVpnErrorTitle =
-            NSLocalizedString("vpn.resetVpnErrorTitle",
+        public static let resetVPNErrorTitle =
+            NSLocalizedString("vpn.resetVPNErrorTitle",
                               bundle: .braveShared,
                               value: "Error",
                               comment: "Title for error message when vpn configuration reset fails.")
         
-        public static let resetVpnErrorBody =
-            NSLocalizedString("vpn.resetVpnErrorBody",
+        public static let resetVPNErrorBody =
+            NSLocalizedString("vpn.resetVPNErrorBody",
                               bundle: .braveShared,
                               value: "Failed to reset vpn configuration, please try again later.",
                               comment: "Message to show when vpn configuration reset fails.")

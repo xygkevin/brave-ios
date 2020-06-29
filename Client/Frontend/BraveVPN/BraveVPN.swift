@@ -434,7 +434,7 @@ class BraveVPN {
         GRDKeychain.removeKeychanItem(forAccount: kKeychainStr_SubscriberCredential)
     }
     
-    static func sendVpnWorksInBackgroundNotification() {
+    static func sendVPNWorksInBackgroundNotification() {
         
         switch vpnState {
         case .expired, .notPurchased, .purchased:

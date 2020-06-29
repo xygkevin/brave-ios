@@ -112,7 +112,7 @@ extension BuyVPNViewController {
             $0.numberOfLines = 0
             $0.lineBreakMode = .byWordWrapping
             $0.textAlignment = .center
-            $0.textColor = UIColor.white.withAlphaComponent(0.6)
+            $0.appearanceTextColor = UIColor.white.withAlphaComponent(0.6)
         }
         
         // MARK: - Init/Lifecycle

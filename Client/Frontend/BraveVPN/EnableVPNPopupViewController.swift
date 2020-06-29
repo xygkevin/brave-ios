@@ -70,7 +70,7 @@ private class ContentView: UIView {
             $0.text = Strings.VPN.vpnName
             $0.appearanceTextColor = .black
             $0.textAlignment = .center
-            $0.font = UIFont.systemFont(ofSize: 33, weight: .heavy)
+            $0.font = .systemFont(ofSize: 33, weight: .heavy)
         }
         
         let poweredByStackView = BraveVPNCommonUI.Views.poweredByView(textColor: .black, imageColor: .black)
@@ -88,7 +88,7 @@ private class ContentView: UIView {
     let enableButton = RoundInterfaceButton(type: .roundedRect).then {
         $0.setTitle(Strings.VPN.buyButton, for: .normal)
         $0.backgroundColor = BraveUX.braveOrange
-        $0.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        $0.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         $0.appearanceTextColor = .white
         $0.snp.makeConstraints { make in
             make.height.equalTo(44)
@@ -110,7 +110,7 @@ private class ContentView: UIView {
             stackView.addArrangedSubview(
                 BraveVPNCommonUI.Views.checkmarkView(string: checkbox,
                                                    textColor: .black,
-                                                   font: UIFont.systemFont(ofSize: 16, weight: .regular)))
+                                                   font: .systemFont(ofSize: 16, weight: .regular)))
         }
     }
     

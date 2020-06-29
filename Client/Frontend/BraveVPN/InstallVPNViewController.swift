@@ -49,14 +49,16 @@ class InstallVPNViewController: UIViewController {
         installVPNView.installVPNButton.isLoading = true
         
         BraveVPN.connectOrMigrateToNewNode() { [weak self] status in
+            guard let self = self else { return }
+            
             DispatchQueue.main.async {
-                self?.installVPNView.installVPNButton.isLoading = false
+                self.installVPNView.installVPNButton.isLoading = false
             }
             
             switch status {
             case .success:
-                self?.dismiss(animated: true) {
-                    self?.showSuccessAlert()
+                self.dismiss(animated: true) {
+                    self.showSuccessAlert()
                 }
             case .error(let type):
                 let alert = { () -> UIAlertController in
@@ -81,7 +83,7 @@ class InstallVPNViewController: UIViewController {
                 }()
                 
                 DispatchQueue.main.async {
-                    self?.present(alert, animated: true)
+                    self.present(alert, animated: true)
                 }
             }
         }

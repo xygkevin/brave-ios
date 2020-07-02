@@ -228,16 +228,18 @@ extension AdsDetailsViewController: UITableViewDelegate, UITableViewDataSource {
       cell.label.text = Strings.adsSubdivisionTargeting
 
       var adsSubdivisionTargetingCode: String
-      if state.ads.subdivisionTargetingCode == "DISABLED" {
-        adsSubdivisionTargetingCode = "Disabled"
-      } else if state.ads.subdivisionTargetingCode == "AUTO" {
+      if state.ads.subdivisionTargetingCode == "AUTO" {
         adsSubdivisionTargetingCode = state.ads.automaticallyDetectedSubdivisionTargetingCode
       } else {
         adsSubdivisionTargetingCode = state.ads.subdivisionTargetingCode
       }
 
-      guard let selectedIndex = subdivisionTargetingOptions.firstIndex(where: { $0.0 == adsSubdivisionTargetingCode }) else { fatalError() }
-      cell.accessoryLabel?.text = subdivisionTargetingOptions[selectedIndex].1
+      if adsSubdivisionTargetingCode == "DISABLED" {
+        cell.accessoryLabel?.text = "Disabled"
+      } else {
+        guard let selectedIndex = subdivisionTargetingOptions.firstIndex(where: { $0.0 == adsSubdivisionTargetingCode }) else { fatalError() }
+        cell.accessoryLabel?.text = subdivisionTargetingOptions[selectedIndex].1
+      }
     case .currentEarnings:
       cell.label.text = Strings.adsEstimatedEarnings
       cell.selectionStyle = .none

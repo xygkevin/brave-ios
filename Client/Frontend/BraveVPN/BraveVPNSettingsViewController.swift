@@ -8,6 +8,8 @@ import Static
 import Shared
 import BraveShared
 
+private let log = Logger.browserLogger
+
 class BraveVPNSettingsViewController: TableViewController {
     
     var faqButtonTapped: (() -> Void)?
@@ -40,6 +42,32 @@ class BraveVPNSettingsViewController: TableViewController {
     
     /// This is local variable only to prevents users from spamming the reset configuration button.
     private var lastTimeVPNWasResetted: Date?
+    
+    /// View to show when the vpn config reset is pending.
+    private var overlayView: UIView?
+    
+    private var isLoading: Bool = false {
+        didSet {
+            overlayView?.removeFromSuperview()
+            
+            if !isLoading { return }
+            
+            let overlay = UIView().then {
+                $0.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+                let activityIndicator = UIActivityIndicatorView().then { indicator in
+                    indicator.startAnimating()
+                    indicator.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                }
+                
+                $0.addSubview(activityIndicator)
+            }
+            
+            view.addSubview(overlay)
+            overlay.frame = CGRect(size: tableView.contentSize)
+            
+            overlayView = overlay
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -166,14 +194,22 @@ class BraveVPNSettingsViewController: TableViewController {
         let cancel = UIAlertAction(title: Strings.cancelButtonTitle, style: .cancel)
         let reset = UIAlertAction(title: Strings.VPN.vpnResetButton, style: .destructive,
                                   handler: { [weak self] _ in
-                                    self?.vpnReconfigurationPending = true
-                                    self?.lastTimeVPNWasResetted = Date()
+                                    guard let self = self else { return }
+                                    self.vpnReconfigurationPending = true
+                                    self.lastTimeVPNWasResetted = Date()
+                                    self.isLoading = true
+                                    log.debug("Reconfiguring the vpn")
+                                    
                                     BraveVPN.reconfigureVPN() { success in
-                                        DispatchQueue.main.async {
-                                            self?.vpnReconfigurationPending = false
-                                            self?.updateServerInfo()
+                                        log.debug("Reconfiguration suceedeed: \(success)")
+                                        // Small delay before unlocking UI because enabling vpn
+                                        // takes a moment after we call to connect to the vpn.
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                            self.isLoading = false
+                                            self.vpnReconfigurationPending = false
+                                            self.updateServerInfo()
                                             if !success {
-                                                self?.showVPNResetErrorAlert()
+                                                self.showVPNResetErrorAlert()
                                             }
                                         }
                                     }
